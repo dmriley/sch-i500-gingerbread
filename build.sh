@@ -59,6 +59,14 @@ if [ "$1" = "clean" ]; then
 	fi
 fi
 
+# BUILD-PLATFORM
+bash $BUILDDIR/build-platform.sh
+if [[ $? -ne 0 ]]; then
+	echo
+	echo ">> ERROR in phase BUILD-PLATFORM. Terminating build."
+	exit
+fi
+
 # BUILD-RAMDISK
 bash $BUILDDIR/build-ramdisk.sh
 if [[ $? -ne 0 ]]; then
