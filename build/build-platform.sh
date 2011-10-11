@@ -33,6 +33,14 @@ pushd $ANDROIDROOTDIR > /dev/null
 source build/envsetup.sh
 lunch generic-eng
 
+# ANIMATIONCHOOSER
+mmm $SRCDIR/animationchooser/
+if [[ $? -ne 0 ]]; then
+	exit -1
+fi
+
+cp $ANDROIDROOTDIR/out/target/product/generic/system/bin/animationchooser $PLATFORMBINDIR/animationchooser
+
 # SPAREPARTS
 mmm $SRCDIR/platform/SpareParts/
 if [[ $? -ne 0 ]]; then

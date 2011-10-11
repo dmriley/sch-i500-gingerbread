@@ -15,6 +15,9 @@ RAMDISKSRCDIR=$SRCDIR/ramdisk
 # RAMDISKBINDIR
 export RAMDISKBINDIR=$BINDIR/ramdisk
 
+# PLATFORMBINDIR
+PLATFORMBINDIR=$BINDIR/platform
+
 if [ ! -d "$BINDIR" ]; then
 	mkdir $BINDIR
 fi
@@ -30,6 +33,9 @@ rm -f $RAMDISKBINDIR/lib/modules/hotspot_event_monitoring.ko
 
 # Copy modified versions of the ramdisk files into the output directory
 cp -R $RAMDISKSRCDIR/* $RAMDISKBINDIR/
+
+# ANIMATIONCHOOSER --> RAMDISK
+cp $PLATFORMBINDIR/animationchooser $RAMDISKBINDIR/sbin/
 
 exit
 

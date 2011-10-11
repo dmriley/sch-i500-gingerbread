@@ -785,10 +785,18 @@ service media /system/bin/mediaserver
     ioprio rt 4
 
 
-service samsungani /system/bin/samsungani
+# djp952: animationchooser (stock)
+service samsungani /sbin/animationchooser stock
     user graphics
     group graphics
     disabled
+    oneshot
+
+# djp952: animationchooser (custom)
+service bootanim /sbin/animationchooser custom
+    user graphics
+    group graphics
+    #disabled
     oneshot
 
 service wpa_supplicant /system/bin/wpa_supplicant -Dwext -ieth0 -c/data/wifi/bcm_supp.conf
