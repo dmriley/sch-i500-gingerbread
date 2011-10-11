@@ -793,7 +793,9 @@ service samsungani /sbin/animationchooser stock
     oneshot
 
 # djp952: animationchooser (custom)
-service bootanim /sbin/animationchooser custom
+# note: named 'playlogos1' so that pretty much any ROM will have the necessary stop command
+# in the android.framework.jar (otherwise it will run forever)
+service playlogos1 /sbin/animationchooser custom
     user graphics
     group graphics
     #disabled
