@@ -16,7 +16,16 @@ if [ -d "$OUTDIR" ]; then
 	rm -f -r $OUTDIR
 fi
 
-# Clean the KERNEL
+# Clean BUSYBOX
+pushd $SRCDIR/busybox > /dev/null
+make clean
+popd > /dev/null
+
+if [[ $? -ne 0 ]]; then
+	exit -1
+fi
+
+# Clean KERNEL
 pushd $SRCDIR/kernel > /dev/null
 make CROSS_COMPILE=$TOOLCHAIN/$TOOLCHAIN_PREFIX clean mrproper
 popd > /dev/null

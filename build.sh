@@ -59,6 +59,14 @@ if [ "$1" = "clean" ]; then
 	fi
 fi
 
+# BUILD-BUSYBOX
+bash $BUILDDIR/build-busybox.sh
+if [[ $? -ne 0 ]]; then
+	echo
+	echo ">> ERROR in phase BUILD-BUSYBOX. Terminating build."
+	exit
+fi
+
 # BUILD-PLATFORM
 bash $BUILDDIR/build-platform.sh
 if [[ $? -ne 0 ]]; then
