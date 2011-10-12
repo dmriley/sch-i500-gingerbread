@@ -57,8 +57,7 @@ static gr_surface gProgressBarEmpty;
 static gr_surface gProgressBarFill;
 
 static const struct { gr_surface* surface; const char *name; } BITMAPS[] = {
-    { &gBackgroundIcon[BACKGROUND_ICON_INSTALLING], "icon_installing" },
-    //{ &gBackgroundIcon[BACKGROUND_ICON_ERROR],      "icon_error" },
+    { &gBackgroundIcon[BACKGROUND_ICON_INSTALLING], "galaxy-s" },
     { &gBackgroundIcon[BACKGROUND_ICON_ERROR],      "galaxy-s" },
     { &gProgressBarIndeterminate[0],    "indeterminate1" },
     { &gProgressBarIndeterminate[1],    "indeterminate2" },
