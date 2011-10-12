@@ -41,6 +41,14 @@ fi
 
 cp $ANDROIDROOTDIR/out/target/product/generic/system/bin/animationchooser $PLATFORMBINDIR/animationchooser
 
+# RECOVERY
+mmm $SRCDIR/recovery/
+if [[ $? -ne 0 ]]; then
+	exit -1
+fi
+
+cp $ANDROIDROOTDIR/out/target/product/generic/system/bin/recovery $PLATFORMBINDIR/recovery
+
 # SPAREPARTS
 mmm $SRCDIR/platform/SpareParts/
 if [[ $? -ne 0 ]]; then
