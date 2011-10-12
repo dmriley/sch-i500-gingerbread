@@ -757,8 +757,8 @@ void cmd_kill_adbd(void)
 	ui_show_indeterminate_progress();
 	ui_print("Killing Android Debug Bridge Daemon (ADBD) ...\n\n");
 	
-	// Install BUSYBOX using the script built into the ramdisk
-	result = WEXITSTATUS(exec("kill $(ps | grep adbd)"));
+	// Find and kill the ADBD service process ...
+	result = WEXITSTATUS(exec("pkill adbd"));
 	if(result != 0) LOGE("Unable to kill ADBD process. EC = %d\n", result);
 	else { ui_print("> ADBD process killed and should restart automatically.\n\n"); }
 	

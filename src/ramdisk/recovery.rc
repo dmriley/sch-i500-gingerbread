@@ -78,24 +78,36 @@ on post-fs
     write /proc/sys/kernel/sched_child_runs_first 0
 	
 on boot
+	# loopback interface
+	#
+	ifup lo
+	hostname localhost
+	domainname localdomain
 
-    ifup lo
-    hostname localhost
-    domainname localdomain
+	# start all default services
+	#
+	class_start default
 
-    class_start default
+	# ueventd service
+	#
+	service ueventd /sbin/ueventd
+    		critical
 
-service ueventd /sbin/ueventd
-    critical
+	# console service
+	#
+	service console /system/bin/sh
+		console
 
-#service console /system/bin/sh
-#    console
+	# adbd service
+	#
+	service adbd /sbin/adbd
 
-service recovery /sbin/recovery
-#service recovery /system/bin/recovery
+	# recovery service
+	#
+	service recovery /sbin/recovery
 
-service adbd /sbin/adbd recovery
-    disabled
+#service adbd /sbin/adbd recovery
+#    disabled
 
 #on property:persist.service.adb.enable=1
 #    start adbd
