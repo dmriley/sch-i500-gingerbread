@@ -19,13 +19,13 @@
 
 // djp952: key codes specific to Samsung SCH-I500
 //
-#define I500KEY_VOLUMEUP	42
-#define I500KEY_VOLUMEDOWN	58
-#define I500KEY_POWER		26
-#define I500KEY_MENU		158
-#define I500KEY_HOME		139
-#define I500KEY_BACK		28
-#define I500KEY_SEARCH		107
+#define I500KEY_VOLUMEUP	115      // Froyo: 42
+#define I500KEY_VOLUMEDOWN	114      // Froyo: 58
+#define I500KEY_POWER		116      // Froyo: 26
+#define I500KEY_MENU		139      // Froyo: 158
+#define I500KEY_HOME		102      // Froyo: 139
+#define I500KEY_BACK		158      // Froyo: 28
+#define I500KEY_SEARCH		217      // Froyo: 107
 
 // Called when recovery starts up.  Returns 0.
 extern int device_recovery_start();
