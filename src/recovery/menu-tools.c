@@ -59,10 +59,10 @@ int menu_tools(void)
 	// Allocate the menu item list
 	items = alloc_menu_list(
 		"- Restart ADBD Service",
-		"- Install BusyBox",
-		"- Install su",
-		"- Remove BusyBox",
-		"- Remove su",
+		//"- Install BusyBox",
+		//"- Install su",
+		//"- Remove BusyBox",
+		//"- Remove su",
 		NULL);
 	
 	if(items == NULL) {
@@ -82,16 +82,16 @@ int menu_tools(void)
 			case 0: cmd_kill_adbd(); break;
 			
 			// INSTALL BUSYBOX
-			case 1: cmd_install_busybox(); break;
+			//case 1: cmd_install_busybox(); break;
 			
 			// INSTALL SU
-			case 2: cmd_install_su(); break;
+			//case 2: cmd_install_su(); break;
 			
 			// REMOVE BUSYBOX
-			case 3: cmd_remove_busybox(); break;
+			//case 3: cmd_remove_busybox(); break;
 			
 			// REMOVE SU
-			case 4: cmd_remove_su(); break;
+			//case 4: cmd_remove_su(); break;
 		}
 
 		nav = navigate_menu(headers, items, &selection);

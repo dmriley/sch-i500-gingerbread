@@ -83,12 +83,12 @@ void menu_mainmenu(void)
 	// Allocate the menu item list
 	items = alloc_menu_list(
 		"- Install Update Package",
-		"- Create Device Backup",
-		"- [OLD] Restore Device from SD Card",
+//		"- Create Device Backup",
+//		"- [OLD] Restore Device from SD Card",
 		"- Wipe Data",
 		"- Manage Volumes",
-		"- [OLD] Advanced Tools",
-		"- Options",
+		"- Tools",
+//		"- Options",
 		"- Exit",
 		NULL);
 	
@@ -114,22 +114,25 @@ void menu_mainmenu(void)
 			case 0: submenu_selectupdate(); break;
 			
 			// BACKUP DEVICE TO SD CARD
-			case 1: cmd_backup_device(); break;
+			//case 1: cmd_backup_device(); break;
 			
 			// RESTORE DEVICE FROM SD CARD
-			case 2: perform_restore_device(); break;
+			//case 2: perform_restore_device(); break;
 
 			// WIPE DATA
-			case 3: menu_wipedata(); break;
+			//case 3: menu_wipedata(); break;
+			case 1: menu_wipedata(); break;
 			
 			// VOLUME MANAGEMENT
-			case 4: menu_volumemanagement(); break;
+			//case 4: menu_volumemanagement(); break;
+			case 2: menu_volumemanagement(); break;
 			
 			// TOOLS
-			case 5: menu_tools(); break;
+			//case 5: menu_tools(); break;
+			case 3: menu_tools(); break;
 			
 			// OPTIONS
-			case 6: /* TODO */ break;
+			//case 6: /* TODO */ break;
 		}
 				
 	} while(selection < lastitem);

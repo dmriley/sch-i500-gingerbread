@@ -66,7 +66,6 @@ int menu_wipedata(void)
 		"- Wipe Cache",
 		"- Wipe Dalvik Cache",
 		"- Wipe Battery Statistics",
-		"- Wipe System Log Files",
 		"- Wipe all User Data (Factory Reset)",
 		NULL);
 	
@@ -92,11 +91,8 @@ int menu_wipedata(void)
 			// WIPE BATTERY STATISTICS
 			case 2: cmd_wipe_battery_stats(); break;
 			
-			// WIPE SYSTEM LOG FILES
-			case 3: /* TODO */ break;
-			
 			// WIPE ALL USER DATA
-			case 4: submenu_wipedata_confirm(); break;
+			case 3: submenu_wipedata_confirm(); break;
 		}
 
 		nav = navigate_menu(headers, items, &selection);
