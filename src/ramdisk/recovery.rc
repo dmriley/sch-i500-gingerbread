@@ -2,12 +2,15 @@ on early-init
     start ueventd
 
 on init
-    export PATH /sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin
-    export LD_LIBRARY_PATH /vendor/lib:/system/lib:/system/lib/egl
-    export ANDROID_ROOT /system
-    export ANDROID_DATA /data
-    export EXTERNAL_STORAGE /sdcard
-    export TMPDIR /data/local/tmp
+
+	# environment
+	#
+	export PATH /sbin:/xbin
+	export LD_LIBRARY_PATH /lib
+	export ANDROID_ROOT /system
+	export ANDROID_DATA /data
+	export EXTERNAL_STORAGE /sdcard
+	export TMPDIR /data/local/tmp
 
     symlink /system/etc /etc
 
@@ -43,9 +46,11 @@ on early-fs
     mkdir /mnt/.lfs 0755 root root
     insmod /lib/modules/j4fs.ko
     mount j4fs /dev/block/stl6 /mnt/.lfs
-    insmod /lib/modules/dpram_recovery.ko
-    insmod /lib/modules/param.ko
-    insmod /lib/modules/drop_caches.ko
+	# additional kernel modules
+	#
+	insmod /lib/modules/dpram_recovery.ko
+	insmod /lib/modules/param.ko
+	insmod /lib/modules/drop_caches.ko
 
     #temp
     chown root root /sbin/fat.format
@@ -95,7 +100,7 @@ on boot
 
 	# console service
 	#
-	service console /system/bin/sh
+	service console /xbin/sh
 		console
 
 	# adbd service
@@ -106,11 +111,3 @@ on boot
 	#
 	service recovery /sbin/recovery
 
-#service adbd /sbin/adbd recovery
-#    disabled
-
-#on property:persist.service.adb.enable=1
-#    start adbd
-
-#on property:persist.service.adb.enable=0
-#    stop adbd
