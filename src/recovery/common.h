@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 #define LOGE(...) ui_print("E:" __VA_ARGS__)
-#define LOGW(...) fprintf(stdout, "W:" __VA_ARGS__)
+#define LOGW(...) ui_print("W:" __VA_ARGS__)
 #define LOGI(...) fprintf(stdout, "I:" __VA_ARGS__)
 
 #if 0

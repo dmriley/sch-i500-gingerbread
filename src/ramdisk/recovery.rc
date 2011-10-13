@@ -12,22 +12,25 @@ on init
 	export EXTERNAL_STORAGE /sdcard
 	export TMPDIR /data/local/tmp
 
-    symlink /system/etc /etc
+	# replace ramdisk /etc with /system/etc
+	#
+    	symlink /system/etc /etc
 
-    mkdir /sdcard
+	# volume mountpoints - names *must* match recovery.fstab
+	#
+	mkdir /cache
+	mkdir /data 0771 system system
+	mkdir /dbdata 0771 system system
+	mkdir /fota 0771 system system    
+	mkdir /preinstall 0771 system system    
+	mkdir /sdcard
+	mkdir /system
+
+
     mkdir /preload
-    mkdir /system
-    mkdir /data 0771 system system
-    mkdir /cache
-    #mkdir /efs
     mkdir /tmp
-    mkdir /dbdata
 
     mkdir /mnt 0775 root root
-    mkdir /tmp
-
-    mkdir /data/fota 0771 system system    
-    mkdir /preinstall 0771 system system    
 
     # This may have been created by the recovery system with odd permissions
     chown system system /cache/recovery

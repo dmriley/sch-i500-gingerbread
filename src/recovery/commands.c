@@ -1429,7 +1429,13 @@ void cmd_wipe_device(void)
 			
 			// Mount the target volume (wipe_volume needs it mounted to figure out the file system!!!)
 			result = mount_volume(iterator, &mounted);
-			if(result != 0) { LOGW("cmd_wipe_device: Cannot mount volume %s\n", iterator->name); failed = 1; continue; }
+			if(result != 0) { 
+				
+				LOGW("cmd_wipe_device: Cannot mount volume %s\n", iterator->name); 
+				failed = 1; 
+				iterator = foreach_volume(iterator);
+				continue; 
+			}
 			
 			// Use wipe_volume() to format the volume with its current filesystem type
 			result = wipe_volume(iterator);
