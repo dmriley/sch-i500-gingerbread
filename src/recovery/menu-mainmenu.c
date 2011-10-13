@@ -42,7 +42,7 @@
 static char SUBHEADER_MAINMENU[] 				= "> Main Menu";
 static char SUBHEADER_MAINMENU_BACKUP[]		 	= "> Backup Device";
 static char SUBHEADER_MAINMENU_RESTORE[]		= "> Restore Device";
-static char SUBHEADER_MAINMENU_APPLYUPDATE[]	= "> Install Updates";
+static char SUBHEADER_MAINMENU_APPLYUPDATE[]	= "> Install Update Package";
 
 //-----------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -85,7 +85,7 @@ void menu_mainmenu(void)
 		"- Install Update Package",
 //		"- Create Device Backup",
 //		"- [OLD] Restore Device from SD Card",
-		"- Wipe Data",
+		"- Wipe Device Data",
 		"- Manage Volumes",
 		"- Tools",
 //		"- Options",

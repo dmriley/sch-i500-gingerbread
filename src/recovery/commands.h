@@ -54,7 +54,7 @@ void cmd_backup_device(void);
 void cmd_backup_directory(const char* directory, const char* destpath, int compress);
 
 // Creates an image of an entire volume
-void cmd_backup_volume(const Volume* srcvol, const char* destpath, cmd_backup_method method, int compress);
+void cmd_backup_volume(const Volume* srcvol, cmd_backup_method method, int compress);
 
 // Converts a volume file system
 void cmd_convert_volume(const Volume* volume, const char* fs);

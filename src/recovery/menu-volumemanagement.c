@@ -70,7 +70,7 @@ typedef struct {
 //-----------------------------------------------------------------------------
 
 // SUBHEADER_XXXX constants for menu headers
-static char SUBHEADER_VOLUMEMGMT[] 		= "> Volume Management";
+static char SUBHEADER_VOLUMEMGMT[] 		= "> Manage Volumes";
 static char SUBHEADER_MOUNTVOLUMES[] 	= "> Mount Volumes";
 static char SUBHEADER_UNMOUNTVOLUMES[] 	= "> Unmount Volumes";
 static char SUBHEADER_FORMATVOLUMES[] 	= "> Format Volumes";
@@ -377,11 +377,10 @@ static int submenu_backuponevolume(const Volume* volume)
 		
 		switch(selection) {
 			
-			// TODO: Hard-coded paths
-			case 0: cmd_backup_volume(volume, "/sdcard/backup", ext4, g_backup_compression); break;
-			case 1: cmd_backup_volume(volume, "/sdcard/backup", ext4_sparse, g_backup_compression); break;
-			case 2: cmd_backup_volume(volume, "/sdcard/backup", dump, g_backup_compression); break;
-			case 3: cmd_backup_volume(volume, "/sdcard/backup", yaffs2, g_backup_compression); break;
+			case 0: cmd_backup_volume(volume, ext4, g_backup_compression); break;
+			case 1: cmd_backup_volume(volume, ext4_sparse, g_backup_compression); break;
+			case 2: cmd_backup_volume(volume, dump, g_backup_compression); break;
+			case 3: cmd_backup_volume(volume, yaffs2, g_backup_compression); break;
 		}
 		
 		nav = NAVIGATE_BACK;
@@ -813,7 +812,7 @@ static int submenu_restoreonevolume(const Volume* volume)
 	// Generate the directory browse filter string.  Backup files can have a number of different
 	// extensions, but if they were created by this recovery they will have the volume name in
 	// ALL CAPS as the base file name
-	snprintf(filter, 256, "%s.*", volume->name);
+	snprintf(filter, 256, "%s*.*", volume->name);
 	
 	// Invoke the directory browser against the root of the SDCARD ...
 	nav = navigate_menu_browse(headers, sdvolume->mount_point, filter, imgfile, 256);

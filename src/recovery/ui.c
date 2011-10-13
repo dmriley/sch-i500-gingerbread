@@ -803,7 +803,6 @@ static int browse_include_subdirectory(const char* path, const char* filter)
 {
 	DIR*				dir;			// Current directory
 	struct dirent*		dirent;			// Current directory entries
-	char 				temp[256];		// Temporary string data
 	int 				include = 0;	// Flag to include this directory
 	
 	// Attempt to open the specified directory

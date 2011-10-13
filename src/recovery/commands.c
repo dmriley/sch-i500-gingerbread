@@ -30,6 +30,8 @@
 #include <sys/statfs.h>					// Include STATFS declarations
 #include <sys/wait.h>					// Include WAIT declarations
 #include <time.h>						// Include TIME declarations
+#include <dirent.h>						// Include DIRENT declarations
+#include <fnmatch.h>					// Include FNMATCH declarations
 #include <diskconfig/diskconfig.h>		// Include DISKCONFIG declarations
 #include <zlib.h>						// Include ZLIB declarations
 #include "common.h"						// Include COMMON declarations
@@ -58,6 +60,9 @@
 
 // CONVERT_TEMP_PATH - Path to use when converting file systems
 static char CONVERT_TEMP_FILE[]	= "/sdcard/__convert_temp.img";
+
+// VOLUME_BACKUP_PATH - Path to use when backing up volumes
+static char VOLUME_BACKUP_PATH[] = "/sdcard/backup/volume";
 
 //-----------------------------------------------------------------------------
 // PRIVATE TYPE DECLARATIONS
@@ -91,6 +96,9 @@ static const cmd_backup_method_info g_backup_method_info[] = {
 //-----------------------------------------------------------------------------
 // PRIVATE FUNCTION PROTOTYPES
 //-----------------------------------------------------------------------------
+
+// Generates the paths for backup operations
+static int cmd_gen_volume_backup_path(const char* volname, const char* ext, char* out, size_t cch);
 
 // Generates the paths for backup operations
 static int cmd_gen_device_backup_path(char* out, size_t cch);
@@ -315,37 +323,42 @@ void cmd_backup_directory(const char* directory, const char* destpath, int compr
 // Arguments:
 //
 //	srcvol		- Source Volume
-//	destpath	- Destination path
 //	method		- Imaging method
 //	compress	- Flag to compress the image file
 
-void cmd_backup_volume(const Volume* srcvol, const char* destpath, 
-	cmd_backup_method method, int compress)
+void cmd_backup_volume(const Volume* srcvol, cmd_backup_method method, int compress)
 {
 	const Volume*	destvol;			// Destination volume
 	int 			destmounted = 0;	// Flag if dest volume was mounted
 	int 			srcmounted = 0;		// Flag if source volume was mounted
 	char			imgfile[256];		// Buffer for generated output file name
+	char*			imgfilename;		// Pointer to the image file name
 	const char*		ext;				// Image file extension
 	ui_callbacks 	callbacks;			// UI callbacks for backup functions
 	int 			result;				// Result from function call
 	
 	ui_clear_text();					// Clear the UI
 	
+	// Generate the output file name, which is based on the volume name and backup method
+	ext = (compress) ? g_backup_method_info[method].compressed_extension : g_backup_method_info[method].extension;
+	result = cmd_gen_volume_backup_path(srcvol->name, ext, imgfile, 256);
+	if(result != 0) { LOGE("cmd_backup_volume: Cannot generate a unique backup file name for volume %s\n", srcvol->name); return; }
+	
+	// Get a pointer to just the image file name for display purposes ...
+	imgfilename = &imgfile[0] + (strlen(imgfile) - 1);
+	while((*imgfilename != '/') && (imgfilename != &imgfile[0])) imgfilename--;
+	if(*imgfilename == '/') imgfilename++;
+
 	// Determine what the destination volume will be and make sure it's not the
 	// same as the source volume ...
-	destvol = get_volume_for_path(destpath);
-	if(destvol == NULL) { LOGE("cmd_backup_volume: Cannot locate volume for path %s\n", destpath); return; }
+	destvol = get_volume_for_path(imgfile);
+	if(destvol == NULL) { LOGE("cmd_backup_volume: Cannot locate volume for path %s\n", imgfile); return; }
 	if(destvol == srcvol) { LOGE("cmd_backup_volume: Destination volume cannot be the same as the source volume\n"); return; }
 	
 	// Mount the destination volume
 	result = mount_volume(destvol, &destmounted);
 	if(result != 0) { LOGE("cmd_backup_volume: Cannot mount destination volume %s\n", destvol->name); return; }
 	
-	// Generate the output file name, which is based on the volume name and backup method
-	ext = (compress) ? g_backup_method_info[method].compressed_extension : g_backup_method_info[method].extension;
-	sprintf(imgfile, "%s/%s.%s", destpath, srcvol->name, ext);
-
 	// Create the output image file directory on the destination volume
 	result = dirCreateHierarchy(imgfile, 0777, NULL, 1);
 	if(result == 0) {
@@ -357,8 +370,8 @@ void cmd_backup_volume(const Volume* srcvol, const char* destpath,
 			// Output some generally useless information about the backup operation
 			ui_print("Backing up volume %s...\n\n", srcvol->name);
 			ui_print("Method      : %s\n", g_backup_method_info[method].name);
-			ui_print("Compression : %s\n", (compress) ? "Enabled" : "Disabled");
-			ui_print("Output File : %s\n", imgfile);
+			ui_print("Compression : %s\n", (compress) ? "enabled" : "disabled");
+			ui_print("Output File : %s\n", imgfilename);
 			ui_print("\n");
 			
 			// Initialize UI callbacks for operations that support them
@@ -406,7 +419,7 @@ void cmd_backup_volume(const Volume* srcvol, const char* destpath,
 		else { LOGE("cmd_backup_volume: Cannot mount source volume %s\n", srcvol->name); }
 	}
 	
-	else { LOGE("cmd_backup_volume: Cannot create destination path %s. EC = %d\n", destpath, result); }
+	else { LOGE("cmd_backup_volume: Cannot create destination path %s. EC = %d\n", imgfile, result); }
 	
 	//
 	// TODO: Unmounting the destination volume seems to take quite a bit of
@@ -566,10 +579,74 @@ void cmd_format_volume(const Volume* volume, const char* fs)
 }
 
 //-----------------------------------------------------------------------------
+// cmd_gen_volume_backup_path (private)
+//
+// Generates the path for a device backup operation
+// Format: /sdcard/backup/volume/VOLUME-YYYYMMDD[-N]
+//
+// Arguments:
+//
+//	volname		- Name of the volume being backed up
+//	ext			- Backup file extension
+//	out 		- Output string
+//	cch			- Length of output buffer, in characters
+
+int cmd_gen_volume_backup_path(const char* volname, const char* ext, char* out, size_t cch)
+{
+	const Volume* 		volume;				// Destination volume (SDCARD)
+	int 				mounted;			// Flag if volume was mounted
+	time_t 				epoch;				// Current epoch time
+	struct tm*			local;				// Coverted epoch time
+	char 				datestring[10];		// Generated date string
+	char 				filter[256];		// File filter
+	DIR*				dir;				// Current directory
+	struct dirent*		dirent;				// Current directory entries	
+	int 				index = 0;			// Path uniqueifier index
+	int 				result;				// Result from function call
+	
+	if((out == NULL) || (cch <= 0)) return EINVAL;
+	
+	// Get a reference to the SDCARD volume
+	volume = get_volume("SDCARD");
+	if(volume == NULL) { LOGE("cmd_gen_volume_backup_path: Cannot locate SDCARD volume entry in fstab.\n"); return ENOENT; }
+	
+	// Mount the SYSTEM volume
+	result = mount_volume(volume, &mounted);
+	if(result != 0) { LOGE("cmd_gen_volume_backup_path: Cannot mount SDCARD, EC = %d\n", result); return ENOENT; }
+
+	// Get the current local system time with which to format the base file name
+	epoch = time(NULL);
+	local = localtime(&epoch);
+	strftime(datestring, 10, "%Y%m%d", local);
+	
+	// Generate the filter for the directory search
+	snprintf(filter, 256, "%s-%s*.*", volname, datestring);
+	
+	// Count all of the files in the target directory that match the base file name
+	// so that an appropriate unique file name can be generated
+	dir = opendir(VOLUME_BACKUP_PATH);
+	if(dir != NULL) {
+	
+		while((dirent = readdir(dir)) != NULL) {
+			if((dirent->d_type == DT_REG) && (fnmatch(filter, dirent->d_name, FNM_FILE_NAME | FNM_IGNORECASE) == 0)) index++;
+		}
+
+		closedir(dir);							// Close the directory
+	}
+
+	// Generate the unique path/file name for this volume backup
+	if(index == 0) snprintf(out, cch, "%s/%s-%s.%s", VOLUME_BACKUP_PATH, volname, datestring, ext);
+	else snprintf(out, cch, "%s/%s-%s-%d.%s", VOLUME_BACKUP_PATH, volname, datestring, index, ext);
+	
+	if(mounted) unmount_volume(volume, NULL);		// Unmount SDCARD if mounted
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
 // cmd_gen_device_backup_path (private)
 //
 // Generates the path for a device backup operation
-// Format: /sdcard/backup/device/YYYYMMDD[.x]
+// Format: /sdcard/backup/device/YYYYMMDD[-N]
 //
 // Arguments:
 //
@@ -605,9 +682,9 @@ int cmd_gen_device_backup_path(char* out, size_t cch)
 	strftime(basepath, PATH_MAX, "/sdcard/backup/device/%Y%m%d", local);
 	strncpy(out, basepath, cch);
 	
-	// Check to see if the generated directory exists, and if so append a .x
+	// Check to see if the generated directory exists, and if so append a -N
 	// uniqueifier to the end of the string until we find one that doesn't
-	while(stat(out, &dirstat) == 0) snprintf(out, cch, "%s.%d", basepath, index++);
+	while(stat(out, &dirstat) == 0) snprintf(out, cch, "%s-%d", basepath, index++);
 	
 	// TODO: It's kind of lame to just assume that stat() returning zero is a 
 	// completely reliable method of determining what we want to determine here
@@ -987,6 +1064,7 @@ void cmd_restore_volume(const char* srcpath, const Volume* destvol)
 	cmd_backup_method 	method;				// Restore method (source file type)
 	int 				destunmounted = 0;	// Flag if dest volume was unmounted
 	ui_callbacks 		callbacks;			// UI callbacks for backup functions
+	char*				srcfile;			// Pointer to the source file name
 	int 				result;				// Result from function call
 	
 	ui_clear_text();					// Clear the UI
@@ -1009,6 +1087,11 @@ void cmd_restore_volume(const char* srcpath, const Volume* destvol)
 		return;
 	}
 	
+	// Get a pointer to just the file name for display purposes
+	srcfile = srcpath + (strlen(srcpath) - 1);
+	while((*srcfile != '/') && (srcfile != srcpath)) srcfile--;
+	if(*srcfile == '/') srcfile++;
+	
 	// YAFFS2 restores of an entire volume requires a different method
 	if(method == yaffs2) { 
 		
@@ -1023,7 +1106,7 @@ void cmd_restore_volume(const char* srcpath, const Volume* destvol)
 	
 		// Output some generally useless information about the restore operation
 		ui_print("Restoring volume %s...\n\n", destvol->name);
-		ui_print("Source File : %s\n", srcpath);
+		ui_print("Source File : %s\n", srcfile);
 		ui_print("Method      : %s\n", g_backup_method_info[method].name);
 		ui_print("\n");
 		

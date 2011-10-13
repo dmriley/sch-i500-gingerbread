@@ -31,7 +31,7 @@
 //-----------------------------------------------------------------------------
 
 // SUBHEADER_XXXX constants for menu headers
-static char SUBHEADER_WIPEDATA[] = "> Wipe Data";
+static char SUBHEADER_WIPEDATA[] = "> Wipe Device Data";
 
 //-----------------------------------------------------------------------------
 // FUNCTION PROTOTYPES
