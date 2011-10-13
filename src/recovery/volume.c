@@ -578,7 +578,7 @@ int unmount_volume(const Volume* volume, int* unmounted)
 
 	// RAMDISK volumes cannot be unmounted
 	if(strcasecmp(volume->fs_type, "ramdisk") == 0) return EINVAL;
-
+	
 	// MTDUTILS: Load the mounted volumes table
     result = scan_mounted_volumes();
     if (result < 0) return result;
@@ -589,6 +589,8 @@ int unmount_volume(const Volume* volume, int* unmounted)
 	// MTDUTILS: if the volume isn't mounted, we're done
 	if (pmv == NULL) return 0;
 	
+	sync();			// <--- Just in case; don't think this is useful here
+
 	// MTDUTILS: Unmount the volume and set the previously mounted flag
 	result = unmount_mounted_volume(pmv);
 	if((result == 0) && (unmounted)) *unmounted = -1;
@@ -648,7 +650,7 @@ int volume_stats(const Volume* volume, struct statfs* stats)
 	// Initialize output data structure
 	memset(stats, 0, sizeof(struct statfs));
 	
-	// Call into the standard version to mount the volume
+	// Mount the volume so we can get the stats
 	result = mount_volume(volume, &mounted);
 	if(result != 0) return result;
 	

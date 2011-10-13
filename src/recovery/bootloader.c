@@ -34,7 +34,7 @@ int get_bootloader_message(struct bootloader_message *out) {
     // djp952: don't crash if there is no /misc volume
     //
     if(!v) {
-        LOGE("get_bootloader_message: /misc volume does not exist\n");
+        //LOGE("get_bootloader_message: /misc volume does not exist\n");
         return -1;
     }
 
@@ -53,7 +53,7 @@ int set_bootloader_message(const struct bootloader_message *in) {
     // djp952: don't crash if there is no /misc volume
     //
     if(!v) {
-        LOGE("set_bootloader_message: /misc volume does not exist\n");
+        //LOGE("set_bootloader_message: /misc volume does not exist\n");
         return -1;
     }
 

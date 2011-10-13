@@ -47,12 +47,12 @@ void show_format_submenu(void);
 extern struct fs_info info;				// <--- For make_ext4fs
 
 static const struct option OPTIONS[] = {
-  { "send_intent", required_argument, NULL, 's' },
-  { "update_package", required_argument, NULL, 'u' },
-  { "wipe_data", no_argument, NULL, 'w' },
-  { "wipe_cache", no_argument, NULL, 'c' },
-  { "show_text", no_argument, NULL, 't' },
-  { NULL, 0, NULL, 0 },
+  { "send_intent", 		required_argument, 	NULL, 's' },
+  { "update_package", 	required_argument, 	NULL, 'u' },
+  { "wipe_data", 		no_argument, 		NULL, 'w' },
+  { "wipe_cache", 		no_argument, 		NULL, 'c' },
+  { "show_text", 		no_argument, 		NULL, 't' },
+  { NULL, 				0, 					NULL, 0   },
 };
 
 static const char *COMMAND_FILE = "/cache/recovery/command";
@@ -296,42 +296,6 @@ copy_log_file(const char* destination, int append) {
     }
 }
 
-//-----------------------------------------------------------------------------
-// erase_volume
-//
-// Erases (formats) the specified volume
-//
-// Arguments:
-//
-//	volume		- Volume to be erased
-//	fs			- Optional file system type to format volume with; NULL for default
-
-static int erase_volume(const Volume* volume, const char* fs) 
-{
-	// Invariant: volume must point to a valid Volume structure
-	if(volume == NULL) {
-		
-		ui_print("RECOVERY::erase_volume: volume is NULL\n");
-		return -1;
-	}
-	
-	// If no specific file system was provided, use the default
-	if(fs == NULL) fs = volume->fs_type;
-	
-	// TODO: I don't think these are working right still
-    ui_set_background(BACKGROUND_ICON_INSTALLING);
-    ui_show_indeterminate_progress();
-	
-    ui_print("Formatting %s (%s) ...\n", volume->name, fs);
-
-	// If the CACHE volume is formatted, the log written to it thus
-	// far will be deleted.  Reset the pointer to copy from beginning
-    if (strcmp(volume->name, "CACHE") == 0) tmplog_offset = 0;
-
-    return format_volume(volume, fs);		// Format the volume
-}
-
-
 // clear the recovery command and prepare to boot a (hopefully working) system,
 // copy our log file to cache as well (for the system to read), and
 // record any intent we were asked to communicate back to the system.
@@ -463,172 +427,6 @@ static int compare_string(const void* a, const void* b) {
     return strcmp(*(const char**)a, *(const char**)b);
 }
 
-//-----------------------------------------------------------------------------
-// wipe_data
-//
-// Wipes all user data from the device
-//
-// Arguments:
-//
-//	confirm		- Flag to confirm the operation or not
-
-static void wipe_data(int confirm) 
-{
-	const Volume*		iterator;		// Volume iterator
-	
-    if (confirm) {
-        static char** title_headers = NULL;
-
-        if (title_headers == NULL) {
-            char* headers[] = { "Confirm wipe of all user data?",
-                                "  THIS CAN NOT BE UNDONE.",
-                                "",
-                                NULL };
-            title_headers = prepend_title((const char**)headers);
-        }
-
-        char* items[] = { " No",
-                          " No",
-                          " No",
-                          " No",
-                          " No",
-                          " No",
-                          " No",
-                          " Yes -- delete all user data",   // [7]
-                          " No",
-                          " No",
-                          " No",
-                          NULL };
-
-        int chosen_item = get_menu_selection(title_headers, items, 1, 0);
-        if (chosen_item != 7) {
-            return;
-        }
-    }
-
-    ui_print("\n-- Wiping data...\n");
-    device_wipe_data();
-	
-	// Iterate over all of the FSTAB volumes and format each one marked as WIPE
-	// with the default primary file system ...
-	iterator = foreach_volume(NULL);
-	while(iterator != NULL) {
-		
-		if(*iterator->wipe == '1') erase_volume(iterator, iterator->fs_type);
-		iterator = foreach_volume(iterator);		
-	}
-	
-    //erase_volume(get_volume("DATA"), NULL);
-    //erase_volume(get_volume("DBDATA"), NULL);
-    //erase_volume(get_volume("FOTA"), NULL);
-    //erase_volume(get_volume("CACHE"), NULL);
-    
-    ui_print("Data wipe complete.\n");
-}
-
-// static void
-// prompt_and_wait() {
-//     
-// 	char** headers = prepend_title((const char**)MENU_HEADERS);
-// 
-// 	int result;
-// 	
-//     for (;;) {
-//         finish_recovery(NULL);
-//         ui_reset_progress();
-// 
-//         int chosen_item = get_menu_selection(headers, MENU_ITEMS, 0, 0);
-// 
-//         // device-specific code may take some action here.  It may
-//         // return one of the core actions handled in the switch
-//         // statement below.
-//         chosen_item = device_perform_action(chosen_item);
-// 
-//         switch (chosen_item) {
-//             case ITEM_REBOOT:
-//                 return;
-// 
-//             case ITEM_WIPE_DATA:
-//                 wipe_data(ui_text_visible());
-//                 if (!ui_text_visible()) return;
-//                 break;
-// 
-//             case ITEM_WIPE_CACHE:
-//                 ui_print("\n-- Wiping cache...\n");
-//                 erase_volume(get_volume("CACHE"), NULL);
-//                 ui_print("Cache wipe complete.\n");
-//                 if (!ui_text_visible()) return;
-//                 break;
-// 
-//             case ITEM_APPLY_SDCARD:
-//                 ;
-//                 int status = sdcard_directory(SDCARD_ROOT);
-//                 if (status >= 0) {
-//                     if (status != INSTALL_SUCCESS) {
-//                         ui_set_background(BACKGROUND_ICON_ERROR);
-//                         ui_print("Installation aborted.\n");
-//                     } else if (!ui_text_visible()) {
-//                         return;  // reboot if logs aren't visible
-//                     } else {
-//                         ui_print("\nInstall from sdcard complete.\n");
-//                     }
-//                 }
-//                 break;
-// 				
-// 			case ITEM_TEST_BACKUP:
-// 				
-// 				result = ensure_path_mounted(SDCARD_ROOT);
-// 				if(result != 0) {
-// 					
-// 					ui_print("MOUNT SDCARD: %d\n", result);
-// 					break;
-// 				}
-// 				
-// 				result = backup_volume(get_volume("SYSTEM"), "/sdcard/system.img");
-// 				if(result != 0) {
-// 					
-// 					ui_print("BACKUP FAILED. RC = %d\n", result);
-// 				}
-// 				else ui_print("BACKUP SUCCESS!\n");
-// 				
-// 				ensure_path_unmounted(SDCARD_ROOT);
-// 				break;
-// 				
-// 			case ITEM_TEST_RESTORE:
-// 				
-// 				result = ensure_path_mounted(SDCARD_ROOT);
-// 				if(result != 0) {
-// 					
-// 					ui_print("MOUNT SDCARD: %d\n", result);
-// 					break;
-// 				}
-// 				
-// 				result = restore_volume(get_volume("SYSTEM"), "/sdcard/system.img");
-// 				if(result != 0) {
-// 					
-// 					ui_print("RESTORE FAILED. RC = %d\n", result);
-// 				}
-// 				else ui_print("RESTORE SUCCESS!\n");
-// 				
-// 				ensure_path_unmounted(SDCARD_ROOT);
-// 				break;
-// 				
-// 			case ITEM_ADVANCED:
-// 				
-// 				//result = erase_volume(get_volume("SYSTEM"), NULL);
-// 				//if(result != 0) {
-// 				//	
-// 				//	ui_print("FAILED TO WIPE SYSTEM: %d\n", result);
-// 				//}
-// 				//else ui_print("SYSTEM WIPED! BETTER FLASH SOMETHING NOW!!\n");
-// 				//break;
-// 				
-// 				menu_advanced();
-// 				break;
-//         }
-//     }
-// }
-
 static void
 print_property(const char *key, const char *name, void *cookie) {
     printf("%s=%s\n", key, name);
@@ -646,6 +444,8 @@ print_property(const char *key, const char *name, void *cookie) {
 
 int main(int argc, char **argv)
 {
+	int interactive = 1;
+	
     time_t start = time(NULL);
 
     // If these fail, there's not really anywhere to complain...
@@ -660,16 +460,13 @@ int main(int argc, char **argv)
     ui_show_text(1);
 
     volumes_init("/sbin/recovery.fstab");
-    ////get_args(&argc, &argv);
+    get_args(&argc, &argv);
 	
     int previous_runs = 0;
     const char *send_intent = NULL;
     const char *update_package = NULL;
     int wipe_data = 0, wipe_cache = 0;
     int toggle_secure_fs = 0;
-	
-	// Display the basic recovery usage information to the user
-	cmd_show_usage();
 	
 	// TEMP: Dump arguments to see what they look like
 	//int index = 0;
@@ -681,74 +478,77 @@ int main(int argc, char **argv)
         case 'p': previous_runs = atoi(optarg); break;
         case 's': send_intent = optarg; break;
         case 'u': update_package = optarg; break;
-        case 'w': wipe_data = wipe_cache = 1; break;
+        case 'w': wipe_data = 1; break;
         case 'c': wipe_cache = 1; break;
         case 't': ui_show_text(1); break;
         case '?':
-            LOGE("Invalid command argument\n");
+            LOGE("Invalid command argument: %c\n", arg);
             continue;
         }
     }
 
     device_recovery_start();
 
-    printf("Command:");
-    for (arg = 0; arg < argc; arg++) {
-        printf(" \"%s\"", argv[arg]);
-    }
-    printf("\n");
-
-    if (update_package) {
-        // For backwards compatibility on the cache partition only, if
-        // we're given an old 'root' path "CACHE:foo", change it to
-        // "/cache/foo".
-        if (strncmp(update_package, "CACHE:", 6) == 0) {
-            int len = strlen(update_package) + 10;
-            char* modified_path = malloc(len);
-            strlcpy(modified_path, "/cache/", len);
-            strlcat(modified_path, update_package+6, len);
-            printf("(replacing path \"%s\" with \"%s\")\n",
-                   update_package, modified_path);
-            update_package = modified_path;
-        }
-    }
-    printf("\n");
+    //if (update_package) {
+    //    // For backwards compatibility on the cache partition only, if
+    //    // we're given an old 'root' path "CACHE:foo", change it to
+    //    // "/cache/foo".
+    //    if (strncmp(update_package, "CACHE:", 6) == 0) {
+    //        int len = strlen(update_package) + 10;
+    //        char* modified_path = malloc(len);
+    //        strlcpy(modified_path, "/cache/", len);
+    //        strlcat(modified_path, update_package+6, len);
+    //        printf("(replacing path \"%s\" with \"%s\")\n",
+    //               update_package, modified_path);
+    //        update_package = modified_path;
+    //    }
+    //}
+    //printf("\n");
 	
     property_list(print_property, NULL);
     printf("\n");
-
-//    int status = INSTALL_ERROR;
-//
-//     if (update_package != NULL) {
-//         status = install_package(update_package);
-//         if (status != INSTALL_SUCCESS) ui_print("Installation aborted.\n");
-//     } else if (wipe_data) {
-//         //if (device_wipe_data()) status = INSTALL_ERROR;
-//         if (erase_volume(get_volume("DATA"), NULL)) status = INSTALL_ERROR;
-//         if (erase_volume(get_volume("DBDATA"), NULL)) status = INSTALL_ERROR;
-//         if (erase_volume(get_volume("FOTA"), NULL)) status = INSTALL_ERROR;
-//         if (wipe_cache && erase_volume(get_volume("CACHE"), NULL)) status = INSTALL_ERROR;
-//         if (status != INSTALL_SUCCESS) ui_print("Data wipe failed.\n");
-//     } else if (wipe_cache) {
-//         if (wipe_cache && erase_volume(get_volume("CACHE"), NULL)) status = INSTALL_ERROR;
-//         if (status != INSTALL_SUCCESS) ui_print("Cache wipe failed.\n");
-//     } else {
-//         status = INSTALL_ERROR;  // No command specified
-//     }
-
-//    if (status != INSTALL_SUCCESS) ui_set_background(BACKGROUND_ICON_ERROR);
-//    if (status != INSTALL_SUCCESS || ui_text_visible()) {
-//       // prompt_and_wait();
-//       menu_mainmenu();
-//    }
 	
-	ui_set_background(BACKGROUND_ICON_ERROR);
-	menu_mainmenu();
+	//
+	// EXECUTE RECOVERY
+	//
 
-    // Otherwise, get ready to boot the main system...
+	// Automatic: --wipe_data
+	if(wipe_data) {
+		
+		interactive = 0;				// No interactive menu mode
+		cmd_wipe_device();				// Wipe the device
+	}
+	
+	// Automatic: --wipe_cache
+	if(wipe_cache) {
+
+		interactive = 0;				// No interactive menu mode
+		cmd_wipe_cache();				// Wipe the cache
+	}
+	
+	// Interactive
+	if(interactive) {
+		
+		cmd_show_usage();				// Explain how to navigate
+		menu_mainmenu();				// Launch the main menu
+	}
+	
+	//
+	// FINISH RECOVERY
+	//
+
+    // Clean up and write out the logs
     finish_recovery(send_intent);
-    ui_print("Rebooting...\n");
-    sync();
-    reboot(RB_AUTOBOOT);
-    return EXIT_SUCCESS;
+	
+	// Unmount all volumes
+	const Volume* iterator = foreach_volume(NULL);
+	while(iterator != NULL) {
+	
+		unmount_volume(iterator, NULL);
+		iterator = foreach_volume(iterator);
+	}
+	
+    sync();							// One more sync for good luck
+    reboot(RB_AUTOBOOT);			// Reboot
+    return EXIT_SUCCESS;			// Done
 }

@@ -1427,16 +1427,6 @@ void cmd_wipe_device(void)
 		
 		if(*iterator->wipe == '1') {
 			
-			// Mount the target volume (wipe_volume needs it mounted to figure out the file system!!!)
-			result = mount_volume(iterator, &mounted);
-			if(result != 0) { 
-				
-				LOGW("cmd_wipe_device: Cannot mount volume %s\n", iterator->name); 
-				failed = 1; 
-				iterator = foreach_volume(iterator);
-				continue; 
-			}
-			
 			// Use wipe_volume() to format the volume with its current filesystem type
 			result = wipe_volume(iterator);
 			if(result != 0) {
@@ -1444,9 +1434,6 @@ void cmd_wipe_device(void)
 				LOGW("cmd_wipe_device: Unable to wipe volume %s. EC = %d\n", iterator->name, result);
 				failed = 1;
 			}
-			
-			// If the volume was mounted before we unmounted it, try to remount it
-			if(mounted) unmount_volume(iterator, NULL);
 		}
 		
 		iterator = foreach_volume(iterator);		// Move to next volume
