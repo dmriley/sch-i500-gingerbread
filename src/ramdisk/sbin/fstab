@@ -12,9 +12,9 @@
 # fs2 options : Optional. Specifies mount options for secondary file system
 
 /dev/block/stl9       /system      ext4  ro,noatime,nodiratime               1  0  SYSTEM      0  rfs  ro,llw,check=no
-/dev/block/stl10      /dbdata      ext4  rw,nosuid,nodev,noatime,nodiratime  1  0  DBDATA      1  rfs  rw,llw,check=no,crypt,nosuid,nodev
+/dev/block/stl10      /dbdata      ext4  rw,nosuid,nodev,noatime,nodiratime  1  0  DBDATA      1  rfs  rw,llw,check=no,nosuid,nodev
 /dev/block/stl11      /cache       ext4  rw,nosuid,nodev,noatime,nodiratime  0  0  CACHE       1  rfs  rw,llw,check=no,nosuid,nodev
-/dev/block/mmcblk0p1  /data        ext4  rw,nosuid,nodev,noatime,nodiratime  1  0  DATA        1  rfs  rw,llw,check=no,crypt,nosuid,nodev
+/dev/block/mmcblk0p1  /data        ext4  rw,nosuid,nodev,noatime,nodiratime  1  0  DATA        1  rfs  rw,llw,check=no,nosuid,nodev
 /dev/block/mmcblk0p2  /data/fota   ext4  rw,nosuid,nodev,noatime,nodiratime  0  0  FOTA        1  rfs  rw,llw,check=no,nosuid,nodev
 /dev/block/mmcblk0p3  /preinstall  ext4  rw,nosuid,nodev,noatime,nodiratime  0  0  PREINSTALL  0  rfs  rw,llw,check=no,nosuid,nodev
 
