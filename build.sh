@@ -14,7 +14,7 @@ export ROOTDIR=`pwd`
 # ANDROIDROOTDIR
 #
 # Root ("TOP") folder of the Android platform solution
-export ANDROIDROOTDIR=~/android/platform/android-2.3.4_r1
+export ANDROIDROOTDIR=~/android/platform/android-2.3.5_r1
 
 # BINDIR / BUILDDIR / DOCDIR / REFDIR / OUTDIR / SRCDIR
 #

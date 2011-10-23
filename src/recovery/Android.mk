@@ -13,11 +13,11 @@ LOCAL_SRC_FILES := \
     	install.c \
     	volume.c \
     	verifier.c \
-		exec.c \
+	exec.c \
     	ui.c \
     	menus.c \
 	commands.c \
-    menu-mainmenu.c \
+    	menu-mainmenu.c \
 	menu-volumemanagement.c \
 	menu-tools.c \
 	menu-wipe.c \

@@ -34,5 +34,13 @@ if [[ $? -ne 0 ]]; then
 	exit -1
 fi
 
+# Clean PLATFORM
+pushd $ANDROIDROOTDIR > /dev/null
+source build/envsetup.sh
+lunch generic-eng
+make clean-recovery
+make clean-SpareParts
+popd > /dev/null
+
 exit
 
