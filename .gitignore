@@ -1,5 +1,14 @@
 /bin/
 /out/
+/src/busybox/*
+/src/busybox/scripts/*
+/src/busybox/scripts/basic/*
+/src/busybox/scripts/basic/.docproc.cmd
+/src/busybox/scripts/basic/.fixdep.cmd
+/src/busybox/scripts/basic/.split-include.cmd
+/src/busybox/scripts/basic/docproc
+/src/busybox/scripts/basic/fixdep
+/src/busybox/scripts/basic/split-include
 /src/kernel/..tmp_kallsyms1.o.cmd
 /src/kernel/..tmp_kallsyms2.o.cmd
 /src/kernel/..tmp_vmlinux1.cmd
