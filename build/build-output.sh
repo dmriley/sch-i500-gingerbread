@@ -9,33 +9,65 @@ echo
 # KERNELBINDIR
 KERNELBINDIR=$BINDIR/kernel
 
+# Ensure output folders exist
+if [ ! -d "$BINDIR" ]; then
+	mkdir $BINDIR
+fi
 if [ ! -d "$OUTDIR" ]; then
 	mkdir $OUTDIR
 fi
 
-#TODO: clean up and move work into out or bin; don't work in REF
+# Clean edify templates from KERNELBINDIR
+if [ -d "$KERNELBINDIR/kernel-update" ]; then
+	rm -f -r $KERNELBINDIR/kernel-update
+fi
+if [ -d "$KERNELBINDIR/recovery-update" ]; then
+	rm -f -r $KERNELBINDIR/recovery-update
+fi
 
-# Edify Update ZIP
-cp $KERNELBINDIR/zImage $REFDIR/update-zip/kernel_update/
-pushd $REFDIR/update-zip > /dev/null
+# Copy zImage/recovery.bin to output
+cp $KERNELBINDIR/zImage $OUTDIR/
+cp $KERNELBINDIR/recovery.bin $OUTDIR/
+
+# Copy edify templates into KERNELBINDIR
+cp -R $REFDIR/kernel-update/ $KERNELBINDIR/
+cp -R $REFDIR/recovery-update/ $KERNELBINDIR/
+
+# KERNEL Edify Update ZIP
+cp $KERNELBINDIR/zImage $KERNELBINDIR/kernel-update/kernel_update/
+pushd $KERNELBINDIR/kernel-update > /dev/null
 zip -r -q sch-i500-kernel.zip .
 mv sch-i500-kernel.zip $OUTDIR/
-rm -f ./kernel_update/zImage
 popd > /dev/null
 
-# ODIN tarball
-cp $KERNELBINDIR/zImage $OUTDIR/
-cp $OUTDIR/zImage $OUTDIR/recovery.bin
+# RECOVERY Edify Update ZIP
+cp $KERNELBINDIR/recovery.bin $KERNELBINDIR/recovery-update/recovery_update/
+pushd $KERNELBINDIR/recovery-update > /dev/null
+zip -r -q sch-i500-recovery.zip .
+mv sch-i500-recovery.zip $OUTDIR/
+popd > /dev/null
+
+# KERNEL ODIN tarball
 pushd $OUTDIR > /dev/null
-tar --format=ustar -cf sch-i500-kernel.tar recovery.bin zImage
+tar --format=ustar -cf sch-i500-kernel.tar zImage
 md5sum -t sch-i500-kernel.tar >> sch-i500-kernel.tar
 mv sch-i500-kernel.tar sch-i500-kernel.tar.md5
-
-# leave the output files in place for heimdall for now
-#rm -f recovery.bin
-#rm -f zImage
-
 popd > /dev/null
 
-#TODO: list outputs
+# RECOVERY ODIN tarball
+pushd $OUTDIR > /dev/null
+tar --format=ustar -cf sch-i500-recovery.tar recovery.bin
+md5sum -t sch-i500-recovery.tar >> sch-i500-recovery.tar
+mv sch-i500-recovery.tar sch-i500-recovery.tar.md5
+popd > /dev/null
+
+pushd $OUTDIR > /dev/null
+md5sum zImage
+md5sum recovery.bin
+md5sum sch-i500-kernel.zip
+md5sum sch-i500-recovery.zip
+md5sum sch-i500-kernel.tar.md5
+md5sum sch-i500-recovery.tar.md5
+popd > /dev/null
+echo
 

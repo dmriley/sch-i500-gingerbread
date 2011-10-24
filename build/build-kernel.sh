@@ -63,5 +63,6 @@ fi
 
 # Copy generated kernel modules into intermediate folder
 cp $SRCDIR/kernel/arch/arm/boot/zImage $KERNELBINDIR
+cp $SRCDIR/kernel/arch/arm/boot/zImage $KERNELBINDIR/recovery.bin
 
 exit
