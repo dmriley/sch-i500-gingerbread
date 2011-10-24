@@ -1,0 +1,13 @@
+ui_print("");
+ui_print("SCH-I500 RECOVERY (Engineering Build)");
+ui_print("-------------------------------------");
+ui_print("");
+show_progress(1.0, 10);
+ui_print("    > Installing RECOVERY");
+package_extract_dir("recovery_update", "/tmp/recovery_update");
+set_progress(0.5);
+set_perm(0, 0, 0755, "/tmp/recovery_update/bmlwrite");
+run_program("/tmp/recovery_update/bmlwrite", "/tmp/recovery_update/recovery.bin", "/dev/block/bml8");
+set_progress(1.0);
+
+
