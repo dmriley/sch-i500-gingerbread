@@ -931,29 +931,32 @@ static void s3c_bat_discharge_reason(struct chg_data *chg)
 extern int verizon_batt_auth_full_check(void);
 extern int verizon_batt_auth_check(void);
 
-static int batt_auth_full_check = 0;
+// djp952: removed
+//static int batt_auth_full_check = 0;
 
 static int s3c_bat_check_v_f(struct chg_data *chg)
 {
-	int retval = 0;
-
-	if (batt_auth_full_check == 0) {
-		retval = verizon_batt_auth_full_check();
-		batt_auth_full_check = 1;
-		if (!retval) {
-			chg->bat_info.batt_health = POWER_SUPPLY_HEALTH_UNSPEC_FAILURE;
-			bat_info("/BATT_ID/ %s failed\n", __func__);
-			return 0;
-		}
-		
-		bat_info("/BATT_ID/ %s passed\n", __func__);
-	} else {
-		retval = verizon_batt_auth_check();
-		if (!retval)
-			return 0;
-	}
-
+	// djp952: just return 1 here to disable the battery check (in maxim_dallas.c, but nobody else calls it)
 	return 1;
+//	int retval = 0;
+//
+//	if (batt_auth_full_check == 0) {
+//		retval = verizon_batt_auth_full_check();
+//		batt_auth_full_check = 1;
+//		if (!retval) {
+//			chg->bat_info.batt_health = POWER_SUPPLY_HEALTH_UNSPEC_FAILURE;
+//			bat_info("/BATT_ID/ %s failed\n", __func__);
+//			return 0;
+//		}
+//		
+//		bat_info("/BATT_ID/ %s passed\n", __func__);
+//	} else {
+//		retval = verizon_batt_auth_check();
+//		if (!retval)
+//			return 0;
+//	}
+//
+//	return 1;
 }
 #else
 
