@@ -49,8 +49,16 @@ fi
 
 cp $ANDROIDROOTDIR/out/target/product/generic/system/bin/recovery $PLATFORMBINDIR/recovery
 
+# MOUNTVOL
+mmm $SRCDIR/mountvol/
+if [[ $? -ne 0 ]]; then
+	exit -1
+fi
+
+cp $ANDROIDROOTDIR/out/target/product/generic/system/bin/mountvol $PLATFORMBINDIR/mountvol
+
 # SPAREPARTS
-mmm $SRCDIR/platform/SpareParts/
+mmm $SRCDIR/SpareParts/
 if [[ $? -ne 0 ]]; then
 	exit -1
 fi
