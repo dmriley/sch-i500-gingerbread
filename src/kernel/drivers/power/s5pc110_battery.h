@@ -125,6 +125,7 @@ enum {
 #define RECHARGE_COND_VOLTAGE		4130000
 #endif
 #define RECHARGE_COND_TIME		(30*1000)	/* 30 seconds */
+#define RECHARGE_COND_SOC 				95		/* 95% SOC before triggering recharge condition */
 #define LOW_BATT_COND_VOLTAGE           3400
 #define LOW_BATT_COND_LEVEL             0
 

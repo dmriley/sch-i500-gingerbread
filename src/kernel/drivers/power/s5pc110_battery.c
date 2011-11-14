@@ -177,6 +177,8 @@ static ssize_t s3c_bat_show_attrs(struct device *dev,
 static ssize_t s3c_bat_store_attrs(struct device *dev, struct device_attribute *attr,
 				   const char *buf, size_t count);
 
+static int s3c_cable_status_update(struct chg_data *chg);
+
 #define SEC_BATTERY_ATTR(_name)								\
 {											\
 	.attr = { .name = #_name, .mode = 0664, .owner = THIS_MODULE },	\
@@ -824,7 +826,13 @@ static void s3c_bat_discharge_reason(struct chg_data *chg)
 	int temp_high_recover = s5p_battery_block_temp->temp_high_recover;
 	int temp_low_recover = s5p_battery_block_temp->temp_low_recover;
 	static int recharge_count = 0;
-
+	
+	// djp952: To get the phone to start charging again after a disconnect, the
+	// safest way seems to invoke s3c_cable_status_update() after resetting the
+	// status variables.  To avoid weirdness, it's done at the very end of this
+	// function, this variable controls that
+	int call_cable_status_update = 0;
+	
 	if (chg->pdata &&
 	    chg->pdata->psy_fuelgauge &&
 	    chg->pdata->psy_fuelgauge->get_property) {
@@ -851,15 +859,23 @@ static void s3c_bat_discharge_reason(struct chg_data *chg)
 #endif
 
 	discharge_reason = chg->bat_info.dis_reason & 0xf;
-
+	
+	// djp952: Added a condition/constant to control RECHARGE_COND_SOC level.  The problem with
+	// just using the VOLTAGE constant is that no matter what you set it to (4.13V by default), it's 
+	// not a good indicator to use here.  The voltage can often vary dramatically when using the phone,
+	// so adding the SOC (state of charge?) provides a nice stable value to key on.
+	//
+	// This code was generally right, the main logic change is to add the flag to call s3c_cable_status_update()
+	// after detecting the recharge condition to actually get the phone charging again.
 	if ((discharge_reason & DISCONNECT_BAT_FULL) &&
-	    chg->bat_info.batt_vcell < RECHARGE_COND_VOLTAGE) {
+	    (chg->bat_info.batt_vcell < RECHARGE_COND_VOLTAGE) && (chg->bat_info.batt_soc < RECHARGE_COND_SOC)) {
 		if (recharge_count < BAT_WAITING_COUNT)
 			recharge_count++;
 		else {
 			chg->bat_info.dis_reason &= ~DISCONNECT_BAT_FULL;
 			recharge_count = 0;
-			bat_info("batt recharging (vol=%d)\n", chg->bat_info.batt_vcell);
+			bat_info("batt recharging (vol=%d; soc=%d)\n", chg->bat_info.batt_vcell, chg->bat_info.batt_soc);
+			call_cable_status_update = 1;
 		}
 	} else if ((discharge_reason & DISCONNECT_BAT_FULL) &&
 	    chg->bat_info.batt_vcell >= RECHARGE_COND_VOLTAGE)
@@ -884,14 +900,16 @@ static void s3c_bat_discharge_reason(struct chg_data *chg)
 		chg->bat_info.dis_reason &= ~DISCONNECT_TEMP_FREEZE;
 #endif
 
+	// djp952: Added SOC test and call to s3c_cable_status_update() here as well; see above commentary
 	if ((discharge_reason & DISCONNECT_OVER_TIME) &&
-	    chg->bat_info.batt_vcell < RECHARGE_COND_VOLTAGE) {
+	    (chg->bat_info.batt_vcell < RECHARGE_COND_VOLTAGE) && (chg->bat_info.batt_soc < RECHARGE_COND_SOC)){
 		if (recharge_count < BAT_WAITING_COUNT)
 			recharge_count++;
 		else {
 			chg->bat_info.dis_reason &= ~DISCONNECT_OVER_TIME;
 			recharge_count = 0;
 			bat_info("batt recharging (vol=%d)\n", chg->bat_info.batt_vcell);
+			call_cable_status_update = 1;
 		}
 	} else if ((discharge_reason & DISCONNECT_OVER_TIME) &&
 	    chg->bat_info.batt_vcell >= RECHARGE_COND_VOLTAGE)
@@ -925,6 +943,14 @@ static void s3c_bat_discharge_reason(struct chg_data *chg)
 		chg->bat_info.batt_temp, chg->bat_info.batt_temp_adc,
 		chg->set_batt_full, chg->bat_info.batt_is_full,
 		chg->cable_status, chg->bat_info.charging_status, chg->bat_info.dis_reason);
+	
+	// djp952: Added to enable recharging the battery after disconnect
+	if(call_cable_status_update == 1) {
+
+		chg->bat_info.batt_is_full = false;		// Reset battery full flag
+		chg->set_batt_full = false;				// Reset battery full flag
+		s3c_cable_status_update(chg);			// Trigger a cable status update to start charging again
+	}
 }
 
 #ifdef __VZW_AUTH_CHECK__
@@ -1514,6 +1540,7 @@ static irqreturn_t max8998_int_work_func(int irq, void *max8998_chg)
 			chg->bat_info.batt_is_full = true;
 		else {
 			chg->set_batt_full = true;
+			chg->bat_info.dis_reason = DISCONNECT_BAT_FULL;		// djp952: Added discharge reason flag
 
 			if (chg->pdata->termination_curr_adc > 0)
 				topoff = MAX8998_TOPOFF_10;
