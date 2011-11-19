@@ -53,6 +53,7 @@ obj-$(CONFIG_SAMSUNG_JACK)      += sec_jack.o
 endif
 endif
 obj-$(CONFIG_USB_SWITCH_FSA9480)	+= fsa9480.o
+obj-$(CONFIG_SAMSUNG_MODEMCTL) += samsung_modemctl/
 obj-$(CONFIG_PARAM)		+=param/
 obj-$(CONFIG_LEVEL)             += level/
 ifeq ($(CONFIG_S5PV210_GARNETT_DELTA), y)
